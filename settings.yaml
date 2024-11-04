@@ -1,0 +1,78 @@
+# 配置文件
+mysql:
+  host:  127.0.0.1 # 192.168.0.130
+  port: 3306
+  config: "charset=utf8mb4&parseTime=True&loc=Local"
+  db: server
+  user: root
+  password: yky030129
+  log_level: dev
+logger:
+  level: info # warning       # 日志等级
+  prefix: '[gvb]'      # 前缀
+  director: log        # 存放的目录
+  show_line: true      # 是否显示行号
+  log_in_console: true # 是否显示文件的路径
+system:
+  host: "0.0.0.0"
+  port: 8080
+  env: release # dev
+site_info:
+  created_at: "2024-10-22"
+  bei_an: "豫"
+  title: "懒羊羊大王的博客"
+  qq_image: "懒羊羊大王"
+  version: "懒羊羊大王"
+  email: "懒羊羊大王"
+  wechat_image: "懒羊羊大王"
+  name: "懒羊羊大王"
+  job: "懒羊羊大王"
+  addr: "懒羊羊大王"
+  slogan: "懒羊羊大王"
+  slogan_en: "懒羊羊大王"
+  web: "懒羊羊大王"
+  bilibili_url: "懒羊羊大王"
+  gitee_url: "懒羊羊大王"
+  github_url: "懒羊羊大王"
+jwt:
+  secret: xxx
+  expires: 2
+  issuer: xx
+qq:
+  app-id: "xx"
+  key: xx
+  redirect: http://blog.landawang.com/login?flag=qq
+email:
+  host: smtp.qq.com
+  port: 465
+  user: 2902772790@qq.com
+  password: "qjklcttrkzqddgbe"
+  default_from_email: 懒羊羊大王
+  use_ssl: true
+  user_tls: false
+qi_niu:
+  enable: true # false      # 如果enable是true，照片就会上传到七牛云上，同时就不会上传到本地的路径下，返回的路径就是七牛云的路径
+  access_key: -MMp0wMv1luLsQa6cuAq0VfwU0pvOk30suRjUN4f
+  secret_key: vj_z5E_YVtjZ2mEO9GMlqZKyoVaoVyXTuulFt25j
+  bucket: lanyangyangdawang
+  cdn: https://lanyangyangdawang.slw4htjx1.hn-bkt.clouddn.com/
+  zone: z2
+  prefix: "gvb"
+  size: 5  # 大小限制
+upload:
+  size: 2
+  path: uploads/images
+local:
+  path: uploads/images
+  store-path: uploads/images
+redis:
+  ip: 127.0.0.1
+  port: 6379
+  password: ""
+  pool_size: 100  # 最大连接数
+es:
+  host: "http://127.0.0.1"
+  port: 9200
+  user:
+  password:
+
