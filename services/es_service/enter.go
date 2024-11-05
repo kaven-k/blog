@@ -3,6 +3,7 @@ package es_service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
 	"server/global"
@@ -52,4 +53,48 @@ func CommList(key string, page, limit int) (list []models.ArticleModel, count in
 		demoList = append(demoList, model)
 	}
 	return demoList, count, err
+}
+
+func CommDetail(id string) (model models.ArticleModel, err error) {
+	res, err := global.EsClient.
+		Get().
+		Index(models.ArticleModel{}.Index()).
+		Id(id).
+		Do(context.Background())
+	// 一般来说是在函数内部处理这个error，要么就是抛给上层函数
+	if err != nil {
+		//logrus.Error(err.Error())
+		return
+	}
+	err = json.Unmarshal(res.Source, &model)
+	if err != nil {
+		//logrus.Error(err)
+		return
+	}
+	model.ID = res.Id
+	return
+}
+
+func CommDetailByKeyword(key string) (model models.ArticleModel, err error) {
+	res, err := global.EsClient.
+		Search().
+		Index(models.ArticleModel{}.Index()).
+		Query(elastic.NewMatchQuery("keyword", key)).
+		Size(1).
+		Do(context.Background())
+	// 一般来说是在函数内部处理这个error，要么就是抛给上层函数
+	if err != nil {
+		return
+	}
+	if res.Hits.TotalHits.Value == 0 {
+		return model, errors.New("文章不存在")
+	}
+	hit := res.Hits.Hits[0]
+	err = json.Unmarshal(hit.Source, &model)
+	if err != nil {
+
+		return
+	}
+	model.ID = hit.Id
+	return
 }

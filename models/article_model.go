@@ -13,8 +13,8 @@ type ArticleModel struct {
 	CreatedAt string `json:"created_at"` // 创建时间
 	UpdatedAt string `json:"updated_at"` // 更新时间
 
-	Title string `json:"title"` // 文章标题
-	//Keyword  string `json:"keyword,omit(list)"` // 关键字
+	Title    string `json:"title"`              // 文章标题
+	Keyword  string `json:"keyword,omit(list)"` // 关键字
 	Abstract string `json:"abstract"`           // 文章简介
 	Content  string `json:"content,omit(list)"` // 文章内容
 
@@ -194,6 +194,7 @@ func (a ArticleModel) ISExistData() bool {
 		logrus.Error(err.Error())
 		return false
 	}
+	// 存在
 	if res.Hits.TotalHits.Value > 0 {
 		return true
 	}
