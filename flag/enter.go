@@ -15,7 +15,7 @@ type Option struct {
 func Parse() Option {
 	db := sys_flag.Bool("db", false, "初始化数据库")
 	uesr := sys_flag.String("u", "", "创建用户")
-	es := sys_flag.String("es", "", "es操作")
+	es := sys_flag.String("es", "", "es")
 	// 解析命令行参数写入注册的flag里
 	sys_flag.Parse()
 	return Option{

@@ -4,6 +4,7 @@ package api
 
 import (
 	"server/api/advertisement_api"
+	"server/api/article_api"
 	"server/api/images_api"
 	"server/api/menu_api"
 	"server/api/message_api"
@@ -20,6 +21,7 @@ type ApiGroup struct {
 	UserApi          user_api.UserApi
 	TagApi           tag_api.TagApi
 	MessageApi       message_api.MessageApi
+	ArticleApi       article_api.ArticleApi
 }
 
 // ApiGroupApp 实例化这个对象

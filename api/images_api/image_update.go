@@ -34,4 +34,3 @@ func (ImagesApi) ImageUpdateView(c *gin.Context) {
 	res.OkWithMessage("图片名称修改成功", c)
 	return
 }
-

@@ -14,7 +14,7 @@ func (router RouterGroup) UserRouter() {
 	router.Use(sessions.Sessions("sessionID", store))
 	router.POST("email_login", userApi.EmailLoginView)
 	router.POST("login", userApi.QQLoginView)
-	router.POST("users_create", middleware.JwtAdmin(), userApi.UserCreateView)
+	router.POST("users_create", userApi.UserCreateView) // middleware.JwtAdmin(),
 	router.GET("users", middleware.JwtAuth(), userApi.UserListView)
 	router.PUT("user_update_role", middleware.JwtAdmin(), userApi.UserUpdateRoleView)
 	router.PUT("user_update_password", middleware.JwtAuth(), userApi.UserUpdatePasswordView)

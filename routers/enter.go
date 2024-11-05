@@ -37,5 +37,7 @@ func InitRouter() *gin.Engine {
 	routerGroupApp.TagRouter()
 	// 消息API
 	routerGroupApp.MessageRouter()
+	// 文章API
+	routerGroupApp.ArticleRouter()
 	return router
 }

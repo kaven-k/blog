@@ -23,7 +23,7 @@ func (DemoModel) Mapping() string {
       },
       "created_at":{
         "type": "date",
-        "null_value": "null",
+        "null_value": "2024-01-01 00:00:00",
         "format": "[yyyy-MM-dd HH:mm:ss]"
       }
     }

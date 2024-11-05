@@ -73,6 +73,9 @@ func FindList(key string, page, limit int) (demoList []DemoModel, count int) {
 	res, err := client.
 		Search(DemoModel{}.Index()).
 		Query(boolSearch).
+		FetchSourceContext(
+			elastic.NewFetchSourceContext(true).Exclude("context"),
+		).
 		From((from - 1) * limit).
 		Size(limit).
 		Do(context.Background())
@@ -181,4 +184,5 @@ func main() {
 	//fmt.Println(list, count)
 	//FindSourceList("go", 1, 10) // 搜索似乎是失效的
 	//Update("go", &DemoModel{Title: "go入门"})
+	DemoModel{}.CreateIndex()
 }
