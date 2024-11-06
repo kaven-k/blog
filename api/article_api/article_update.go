@@ -60,6 +60,13 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		BannerUrl: bannerUrl,
 		Tags:      cr.Tags,
 	}
+	// 判断文章是否存在
+	err = article.GetDataByID(cr.ID)
+	if err != nil {
+		global.Log.Error(err)
+		res.FailWithMessage("文章不存在", c)
+		return
+	}
 	// 结构体转map
 	maps := structs.Map(&article)
 	var DataMap = map[string]any{}

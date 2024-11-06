@@ -8,28 +8,75 @@ import (
 	"github.com/sirupsen/logrus"
 	"server/global"
 	"server/models"
+	"server/services/redis_service"
+	"strings"
 )
 
-func CommList(key string, page, limit int) (list []models.ArticleModel, count int, err error) {
+type Option struct {
+	models.PageInfo
+	Fields []string `form:"fields" json:"fields"`
+	Tag    string   `form:"tag" json:"tag"`
+}
+
+// GetForm 生效于原值，这里就要用指针
+func (o *Option) GetForm() int {
+	if o.Page <= 0 {
+		o.Page = 1
+	}
+	if o.Limit <= 0 {
+		o.Limit = 10
+	}
+	return (o.Page - 1) * o.Limit
+
+}
+
+func CommList(option Option) (list []models.ArticleModel, count int, err error) {
 	boolSearch := elastic.NewBoolQuery()
-	from := page
-	if key != "" {
+	if option.Key != "" {
 		boolSearch.Must(
-			elastic.NewMatchQuery("title", key),
+			//elastic.NewMatchQuery("title", key),
+			//elastic.NewMultiMatchQuery(option.Key, "title", "abstract", "content"),
+			elastic.NewMultiMatchQuery(option.Key, option.Fields...),
 		)
 	}
-	if limit == 0 {
-		limit = 10
+	// 根据标签搜
+	if option.Tag != "" {
+		boolSearch.Must(
+			//elastic.NewMultiMatchQuery(option.Tag, option.Fields...))
+			elastic.NewMultiMatchQuery(option.Tag, "tags"))
 	}
-	if from == 0 {
-		from = 1
+
+	type SortField struct {
+		Field     string
+		Ascending bool
 	}
+
+	sortField := SortField{
+		Field:     "created_at", // 设置一个默认字段
+		Ascending: false,        // 从小到大 从大到小
+	}
+	if option.Sort != "" {
+		_list := strings.Split(option.Sort, " ")                          // 截取
+		if len(_list) == 2 && (_list[1] == "desc" || _list[1] == "asc") { // 逻辑短路
+			sortField.Field = _list[0]
+			if _list[1] == "desc" {
+				sortField.Ascending = false
+			}
+			if _list[1] == "asc" {
+				sortField.Ascending = true
+			}
+		}
+	}
+
+	//fmt.Println(sortField)
 
 	res, err := global.EsClient.
 		Search(models.ArticleModel{}.Index()).
 		Query(boolSearch).
-		From((from - 1) * limit).
-		Size(limit).
+		Highlight(elastic.NewHighlight().Field("title")). // 高亮标题字段
+		From(option.GetForm()).
+		Sort(sortField.Field, sortField.Ascending).
+		Size(option.Limit).
 		Do(context.Background())
 	if err != nil {
 		logrus.Error(err.Error())
@@ -37,6 +84,10 @@ func CommList(key string, page, limit int) (list []models.ArticleModel, count in
 	}
 	count = int(res.Hits.TotalHits.Value) //搜索到结果总条数
 	demoList := []models.ArticleModel{}
+
+	diggInfo := redis_service.GetDiggInfo()
+	lookInfo := redis_service.GetLookInfo()
+
 	for _, hit := range res.Hits.Hits {
 		var model models.ArticleModel
 		data, err := hit.Source.MarshalJSON()
@@ -49,12 +100,23 @@ func CommList(key string, page, limit int) (list []models.ArticleModel, count in
 			logrus.Error(err)
 			continue
 		}
+		title, ok := hit.Highlight["title"]
+		if ok {
+			model.Title = title[0]
+		}
 		model.ID = hit.Id
+		digg := diggInfo[hit.Id]
+		look := lookInfo[hit.Id]
+
+		model.DiggCount = model.DiggCount + digg
+		model.LookCount = model.LookCount + look
+
 		demoList = append(demoList, model)
 	}
 	return demoList, count, err
 }
 
+// CommDetail 通过id查询
 func CommDetail(id string) (model models.ArticleModel, err error) {
 	res, err := global.EsClient.
 		Get().
@@ -63,18 +125,18 @@ func CommDetail(id string) (model models.ArticleModel, err error) {
 		Do(context.Background())
 	// 一般来说是在函数内部处理这个error，要么就是抛给上层函数
 	if err != nil {
-		//logrus.Error(err.Error())
 		return
 	}
 	err = json.Unmarshal(res.Source, &model)
 	if err != nil {
-		//logrus.Error(err)
 		return
 	}
 	model.ID = res.Id
+	model.LookCount = model.LookCount + redis_service.GetLook(res.Id)
 	return
 }
 
+// CommDetailByKeyword 通过关键字查询
 func CommDetailByKeyword(key string) (model models.ArticleModel, err error) {
 	res, err := global.EsClient.
 		Search().

@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
 	"server/global"
@@ -190,7 +191,7 @@ func (a ArticleModel) Create() (err error) {
 func (a ArticleModel) ISExistData() bool {
 	res, err := global.EsClient.
 		Search(a.Index()).
-		Query(elastic.NewTermQuery("keyword", a.Title)).
+		Query(elastic.NewTermQuery("keyword", a.Title)). // 根据title去找
 		Size(1).
 		Do(context.Background())
 	if err != nil {
@@ -202,4 +203,19 @@ func (a ArticleModel) ISExistData() bool {
 		return true
 	}
 	return false
+}
+
+// GetDataByID 是否存在该文章
+func (a *ArticleModel) GetDataByID(id string) error {
+	res, err := global.EsClient.
+		Get().
+		Index(a.Index()).
+		Id(id).
+		Do(context.Background())
+	if err != nil {
+		logrus.Error(err.Error())
+		return err
+	}
+	err = json.Unmarshal(res.Source, a)
+	return err
 }

@@ -39,5 +39,7 @@ func InitRouter() *gin.Engine {
 	routerGroupApp.MessageRouter()
 	// 文章API
 	routerGroupApp.ArticleRouter()
+	// 评论点赞API
+	routerGroupApp.DiggRouter()
 	return router
 }
