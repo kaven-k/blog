@@ -1,14 +1,13 @@
 package article_api
 
 import (
-	"context"
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"server/global"
 	"server/models"
 	"server/models/ctype"
 	"server/models/res"
+	"server/services/es_service"
 	"time"
 )
 
@@ -60,13 +59,7 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		BannerUrl: bannerUrl,
 		Tags:      cr.Tags,
 	}
-	// 判断文章是否存在
-	err = article.GetDataByID(cr.ID)
-	if err != nil {
-		global.Log.Error(err)
-		res.FailWithMessage("文章不存在", c)
-		return
-	}
+
 	// 结构体转map
 	maps := structs.Map(&article)
 	var DataMap = map[string]any{}
@@ -96,17 +89,28 @@ func (ArticleApi) ArticleUpdateView(c *gin.Context) {
 		}
 		DataMap[key] = v
 	}
-
-	_, err = global.EsClient.
-		Update().
-		Index(models.ArticleModel{}.Index()).
-		Id(cr.ID).
-		Doc(DataMap).
-		Do(context.Background())
+	// 判断文章是否存在
+	err = article.GetDataByID(cr.ID)
 	if err != nil {
-		logrus.Error(err.Error())
-		res.FailWithMessage("更新失败", c)
+		global.Log.Error(err)
+		res.FailWithMessage("文章不存在", c)
 		return
 	}
-	res.OkWithMessage("更新成功", c)
+
+	err = es_service.ArticleUpdate(cr.ID, DataMap)
+	if err != nil {
+		global.Log.Error(err)
+		res.FailWithMessage("文章更新失败", c)
+		return
+	}
+
+	// 更新成功，同步数据到全文搜索
+	newArticle, _ := es_service.CommDetail(cr.ID)
+	// 判断是否有变化
+	if article.Content != newArticle.Content || article.Title != newArticle.Title {
+		es_service.DeleteFullTextByArticleID(cr.ID)
+		es_service.AsyncArticleByFullText(cr.ID, article.Title, newArticle.Content)
+	}
+
+	res.OkWithMessage("文章更新成功", c)
 }

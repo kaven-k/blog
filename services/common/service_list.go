@@ -26,7 +26,8 @@ func CommList[T any](model T, option Option) (list []T, count int64, err error) 
 	query := DB.Where(model) //这样就能将model里面的参数查进去
 	// 列表页会有分页
 	//DB.Model(model).Count(&count)
-	count = query.Select("id").Find(&list).RowsAffected // 查所有的数据,数据量大的话，这里会有点慢
+	//count = query.Select("id").Find(&list).RowsAffected // 查所有的数据,数据量大的话，这里会有点慢
+	count = query.Find(&list).RowsAffected // 查所有的数据,数据量大的话，这里会有点慢
 	// 这里的query会受上面query的影响，需要手动复位
 	query = DB.Where(model)                    // 这里如果没有这一句query就被前面的覆盖，加这一句是为了复位
 	offset := option.Limit * (option.Page - 1) //通过当前的页数计算得出

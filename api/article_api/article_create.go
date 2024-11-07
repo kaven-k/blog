@@ -9,6 +9,7 @@ import (
 	"server/global"
 	"server/models"
 	"server/models/res"
+	"server/services/es_service"
 	"server/utils/jwts"
 	"strings"
 	"time"
@@ -124,6 +125,7 @@ func (ArticleApi) ArticleCreateView(c *gin.Context) {
 		res.FailWithMessage(err.Error(), c)
 		return
 	}
+	go es_service.AsyncArticleByFullText(article.ID, article.Title, article.Content)
 	res.OkWithMessage("文章发布成功", c)
 
 }
